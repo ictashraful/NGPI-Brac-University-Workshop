@@ -55,29 +55,19 @@ counts = dept_count(data)
 total = len(data)
 
 # -----------------------------------------------------------------------------
-# STEP 5: FIXED SINGLE-LINE HEADER (ফন্ট সাইজ ছোট ও এক লাইনে ফিক্সড)
+# STEP 5: CLEAN NATIVE HEADER (কোনো HTML বা CSS জটিলতা ছাড়া)
 # -----------------------------------------------------------------------------
-st.markdown(
-    """
-    <div style="text-align: center; margin-bottom: 5px;">
-        <h2 style="font-family: sans-serif; font-size: 21px; font-weight: 700; color: #1e293b; margin: 0; white-space: nowrap;">
-            Narsingdi Government Polytechnic Institute
-        </h2>
-        <p style="font-family: sans-serif; font-size: 13px; color: #64748b; margin-top: 6px; margin-bottom: 0;">
-            🎓 Online Information Collection Portal — 7th Semester
-        </p>
-    </div>
-    """, 
-    unsafe_allowed_html=True
-)
-st.caption("<p style='text-align: center; margin-top: 2px;'>Please fill out the form carefully with accurate institutional information.</p>", unsafe_allowed_html=True)
+# ফ্রন্ট-এন্ড ক্র্যাশ এড়াতে এখানে একদম অফিশিয়াল প্লেইন উইজেট ব্যবহার করা হয়েছে
+st.title("Narsingdi Govt Polytechnic Institute")
+st.subheader("Online Information Collection Portal — 7th Semester")
+st.text("Please fill out the form carefully with accurate institutional information.")
 st.divider()
 
 # -----------------------------------------------------------------------------
 # STEP 6: REGISTRATION CAPACITY CHECK
 # -----------------------------------------------------------------------------
 if total >= MAX_STUDENTS:
-    st.error("⚠️ Registration Closed (Maximum capacity of 100 students has been reached).")
+    st.error("⚠️ Registration Closed (Maximum capacity reached).")
     st.stop()
 
 available_dept = [d for d, l in LIMITS.items() if counts[d] < l]
@@ -129,11 +119,11 @@ with st.form("student_registration_form", clear_on_submit=False):
         reg_check = supabase.table("students").select("*").eq("registration", reg).execute().data
 
         if roll_check:
-            st.error(f"🚫 Roll Number '{roll}' is already registered in the system.")
+            st.error(f"🚫 Roll Number '{roll}' is already registered.")
             st.stop()
 
         if reg_check:
-            st.error(f"🚫 Registration Number '{reg}' is already registered in the system.")
+            st.error(f"🚫 Registration Number '{reg}' is already registered.")
             st.stop()
 
         student_data = {
@@ -150,7 +140,7 @@ with st.form("student_registration_form", clear_on_submit=False):
 
         supabase.table("students").insert(student_data).execute()
         
-        st.success("🎉 Registration Successful! Your data has been securely saved.")
+        st.success("🎉 Registration Successful!")
         st.balloons()
         
         st.info(f"**Registered Name:** {student_data['name']}  \n**Roll:** {student_data['roll']}  \n**Technology:** {student_data['department']} ({student_data['shift']})")
@@ -183,8 +173,7 @@ else:
     m_col1, m_col2, m_col3 = st.columns(3)
     m_col1.metric("Total Enrolled", len(admin_data))
     m_col2.metric("Remaining Slots", MAX_STUDENTS - len(admin_data))
-    # ফিক্সড: টেক্সটের জন্য st.metric এর বদলে স্ট্যাটিক টেক্সট শো করানো হয়েছে যেন ক্র্যাশ না করে
-    m_col3.markdown("<div style='padding: 5px 0px;'><strong>Institute</strong><br><span style='font-size: 22px; font-weight: bold; color: #0284c7;'>NGPI</span></div>", unsafe_allowed_html=True)
+    m_col3.metric("Institute Code", 10022)  # স্ট্রিং এর বদলে এখানে ইন্টিজার আইডি দিয়ে সেফ রাখা হয়েছে
     
     st.write("#### 📂 Technology-wise Enrollment Status")
     for d, limit in LIMITS.items():
