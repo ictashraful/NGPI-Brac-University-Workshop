@@ -216,7 +216,7 @@ else:
     m_col1, m_col2, m_col3 = st.columns(3)
     m_col1.metric("Total Enrolled", len(admin_data))
     m_col2.metric("Remaining Slots", MAX_STUDENTS - len(admin_data))
-    m_col3.metric("Institute Code", 10022) 
+    m_col3.metric("Institute Code", 52041) 
     
     st.write("#### 📂 Technology-wise Enrollment Status")
     for d, limit in LIMITS.items():
