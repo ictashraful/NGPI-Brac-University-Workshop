@@ -54,22 +54,14 @@ counts = dept_count(data)
 total = len(data)
 
 # -----------------------------------------------------------------------------
-# STEP 5: SMART & PROFESSIONAL UI HEADER
+# STEP 5: SMART & PROFESSIONAL UI HEADER (ফিক্সড করা হয়েছে)
 # -----------------------------------------------------------------------------
-# একটি প্রফেশনাল এবং মিনিমালিস্ট ব্যানার স্টাইল হেডিং (Govt. Institute এর উপযোগী)
-st.markdown(
-    """
-    <div style="background-color: #1e293b; padding: 25px; border-radius: 12px; text-align: center; border-left: 6px solid #0284c7; margin-bottom: 25px;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 24pt; font-family: 'Helvetica Neue', sans-serif; font-weight: 700;">
-            Narsingdi Government Polytechnic Institute
-        </h1>
-        <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 12pt; letter-spacing: 0.5px;">
-            🎓 Online Information Collection Portal — 7th Semester
-        </p>
-    </div>
-    """, 
-    unsafe_allowed_html=True
-)
+# HTML এরর এড়াতে Streamlit-এর নিজস্ব কন্টেইনার এবং টাইটেল উইজেট ব্যবহার করা হয়েছে
+with st.container(border=True):
+    st.markdown("<h1 style='text-align: center; color: #1e293b; font-family: sans-serif; font-size: 26px; margin-bottom: 0px;'>Narsingdi Government Polytechnic Institute</h1>", unsafe_allowed_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b; font-size: 14px; margin-top: 5px; margin-bottom: 5px;'>🎓 Online Information Collection Portal — 7th Semester</p>", unsafe_allowed_html=True)
+
+st.markdown("<br>", unsafe_allowed_html=True)
 
 # -----------------------------------------------------------------------------
 # STEP 6: REGISTRATION CAPACITY CHECK
@@ -78,7 +70,6 @@ if total >= MAX_STUDENTS:
     st.error("⚠️ Registration Closed (Maximum capacity of 100 students has been reached).")
     st.stop()
 
-# ডিপার্টমেন্টের সিট খালি আছে কিনা পরীক্ষা
 available_dept = [d for d, l in LIMITS.items() if counts[d] < l]
 
 if not available_dept:
@@ -88,13 +79,11 @@ if not available_dept:
 # -----------------------------------------------------------------------------
 # STEP 7: MODERN STUDENT FORM
 # -----------------------------------------------------------------------------
-# ফর্মের চারপাশে সুন্দর কন্টেইনার এফেক্ট
 with st.container():
     with st.form("student_registration_form", clear_on_submit=False):
         
         st.markdown("<h3 style='color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 15px;'>📝 Student Profile</h3>", unsafe_allowed_html=True)
         
-        # দুই কলামের লেআউট ব্যবহার করে ফর্মটিকে স্মার্ট করা হয়েছে
         col1, col2 = st.columns(2)
         
         with col1:
@@ -112,10 +101,8 @@ with st.container():
         st.markdown("<br>", unsafe_allowed_html=True)
         confirm = st.checkbox("I hereby declare that all the information provided above is correct and I am a regular student of 7th Semester.")
         
-        # সাবমিট বাটনটি ফুল-উইডথ ও প্রফেশনাল করা হয়েছে
         submit = st.form_submit_button("Submit Application", use_container_width=True)
 
-        # সাবমিট লজিক এবং ভ্যালিডেশন
         if submit:
             if not confirm:
                 st.error("🔒 Please check the declaration checkbox to proceed.")
@@ -129,7 +116,6 @@ with st.container():
                 st.error("📱 Invalid Bangladeshi mobile number. It must be 11 digits and start with '01'.")
                 st.stop()
 
-            # ডাটাবেজে ডুপ্লিকেট চেক (ইউনিক রোল ও রেজিস্ট্রেশন)
             roll_check = supabase.table("students").select("*").eq("roll", roll).execute().data
             reg_check = supabase.table("students").select("*").eq("registration", reg).execute().data
 
@@ -141,9 +127,8 @@ with st.container():
                 st.error(f"🚫 Registration Number '{reg}' is already registered in the system.")
                 st.stop()
 
-            # ডাটা প্রিপারেশন
             student_data = {
-                "name": name.strip().upper(), # অটো ক্যাপিটাল লেটার করে সেভ হবে
+                "name": name.strip().upper(),
                 "roll": roll.strip(),
                 "registration": reg.strip(),
                 "department": department,
@@ -154,13 +139,11 @@ with st.container():
                 "email": email.strip()
             }
 
-            # ডাটা ইনসার্ট
             supabase.table("students").insert(student_data).execute()
             
             st.success("🎉 Registration Successful! Your data has been securely saved.")
             st.balloons()
             
-            # মেমো বা রিসিট কার্ড
             st.info(f"**Registered Name:** {student_data['name']}  \n**Roll:** {student_data['roll']}  \n**Technology:** {student_data['department']} ({student_data['shift']})")
             st.rerun()
 
@@ -170,7 +153,6 @@ with st.container():
 st.markdown("<br><br>", unsafe_allowed_html=True)
 st.divider()
 
-# অ্যাডমিন এরিয়াকে একটু আলাদা লুক দেওয়া হয়েছে
 st.markdown("<h3 style='color: #475569;'>🔐 Management & Administration</h3>", unsafe_allowed_html=True)
 
 if "admin_auth" not in st.session_state:
@@ -184,18 +166,15 @@ if not st.session_state.admin_auth:
 else:
     st.success("🔓 Administrative Access Granted")
     
-    # লেটেস্ট ডাটা রি-লোড
     admin_data = load_data()
     admin_counts = dept_count(admin_data)
     
-    # আধুনিক কার্ড স্টাইল মেট্রিক্স (Metrics)
     st.markdown("#### 📊 Dashboard Overview")
     m_col1, m_col2, m_col3 = st.columns(3)
     m_col1.metric("Total Enrolled", len(admin_data))
     m_col2.metric("Total Remaining Slots", MAX_STUDENTS - len(admin_data))
     m_col3.metric("Institutions Name", "NGPI")
     
-    # ডিপার্টমেন্ট প্রোগ্রেস বার
     st.markdown("#### 📂 Technology-wise Enrollment Status")
     for d, limit in LIMITS.items():
         current = admin_counts[d]
@@ -203,7 +182,6 @@ else:
         st.write(f"**{d} Technology** ({current} / {limit})")
         st.progress(percentage)
 
-    # স্মার্ট সার্চ ইঞ্জিন
     st.markdown("#### 🔍 Student Search Engine")
     search_query = st.text_input("Search student by Roll or Registration number", placeholder="Type roll/reg here...")
     
@@ -214,18 +192,15 @@ else:
         else:
             st.caption("No matching student records found.")
 
-    # মাস্টার ডাটা টেবিল
     st.markdown("#### 📋 Database Records")
     if admin_data:
         df = pd.DataFrame(admin_data)
         
-        # কলামগুলোর রি-অর্ডার ও সুন্দর নাম প্রদান
         if not df.empty:
             cols_order = ["name", "roll", "registration", "department", "shift", "session", "mobile", "email", "created_at"]
             df = df.reindex(columns=cols_order)
             st.dataframe(df, use_container_width=True)
 
-            # এক্সেল রিপোর্ট এক্সপোর্ট জেনারেটর
             excel_buffer = BytesIO()
             with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='NGPI_7th_Sem')
