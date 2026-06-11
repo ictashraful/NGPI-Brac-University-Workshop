@@ -4,7 +4,7 @@ import pandas as pd
 from io import BytesIO
 
 # -----------------------------------------------------------------------------
-# STEP 1: SET PAGE CONFIG (সবার আগে থাকতে হবে)
+# STEP 1: SET PAGE CONFIG (সবার আগে থাকা বাধ্যতামূলক)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="NGPI Student Registration", 
@@ -20,7 +20,7 @@ SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # -----------------------------------------------------------------------------
-# STEP 3: INSTITUTION CONFIGURATIONS
+# STEP 3: INSTITUTION CONFIGURATIONS (NGPI Seats)
 # -----------------------------------------------------------------------------
 LIMITS = {
     "CT": 30,    # Computer Technology
@@ -37,7 +37,8 @@ MAX_STUDENTS = 100
 # -----------------------------------------------------------------------------
 def load_data():
     try:
-        return supabase.table("students").select("*").execute().data
+        res = supabase.table("students").select("*").execute()
+        return res.data if res.data else []
     except Exception:
         return []
 
@@ -54,14 +55,13 @@ counts = dept_count(data)
 total = len(data)
 
 # -----------------------------------------------------------------------------
-# STEP 5: SMART & PROFESSIONAL UI HEADER (ফিক্সড করা হয়েছে)
+# STEP 5: NATIVE SMART HEADER (কোনো HTML এরর আসবে না)
 # -----------------------------------------------------------------------------
-# HTML এরর এড়াতে Streamlit-এর নিজস্ব কন্টেইনার এবং টাইটেল উইজেট ব্যবহার করা হয়েছে
-with st.container(border=True):
-    st.markdown("<h1 style='text-align: center; color: #1e293b; font-family: sans-serif; font-size: 26px; margin-bottom: 0px;'>Narsingdi Government Polytechnic Institute</h1>", unsafe_allowed_html=True)
-    st.markdown("<p style='text-align: center; color: #64748b; font-size: 14px; margin-top: 5px; margin-bottom: 5px;'>🎓 Online Information Collection Portal — 7th Semester</p>", unsafe_allowed_html=True)
-
-st.markdown("<br>", unsafe_allowed_html=True)
+# প্রফেশনাল ও অফিসিয়াল লুক দিতে স্ট্রিমলিটের নিজস্ব উইজেট ব্যবহার করা হয়েছে
+st.title("Narsingdi Government Polytechnic Institute")
+st.subheader("🎓 Online Information Collection Portal — 7th Semester")
+st.caption("Please fill out the form carefully with accurate institutional information.")
+st.divider()
 
 # -----------------------------------------------------------------------------
 # STEP 6: REGISTRATION CAPACITY CHECK
@@ -79,81 +79,86 @@ if not available_dept:
 # -----------------------------------------------------------------------------
 # STEP 7: MODERN STUDENT FORM
 # -----------------------------------------------------------------------------
-with st.container():
-    with st.form("student_registration_form", clear_on_submit=False):
+with st.form("student_registration_form", clear_on_submit=False):
+    
+    st.write("### 📝 Student Profile Information")
+    
+    # দুই কলামের অত্যন্ত প্রফেশনাল ও রেসপন্সিভ লেআউট
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        name = st.text_input("Full Name (Capital Letters)", placeholder="e.g. RAHAT KHAN")
+        roll = st.text_input("Roll Number (6 Digits)", placeholder="e.g. 153245")
+        department = st.selectbox("Department / Technology", available_dept)
+        session = st.text_input("Academic Session", placeholder="e.g. 2021-22")
         
-        st.markdown("<h3 style='color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 15px;'>📝 Student Profile</h3>", unsafe_allowed_html=True)
+    with col2:
+        email = st.text_input("Email Address", placeholder="name@example.com")
+        reg = st.text_input("Registration Number (10 Digits)", placeholder="e.g. 1502145326")
+        shift = st.selectbox("Shift", ["1st Shift", "2nd Shift"])
+        mobile = st.text_input("Mobile Number", placeholder="01XXXXXXXXX")
+
+    st.write("")
+    confirm = st.checkbox("I hereby declare that all the information provided above is correct and I am a regular student of 7th Semester.")
+    
+    # সাবমিট বাটনকে পুরো উইডথ জুড়ে স্মার্ট করা হয়েছে
+    submit = st.form_submit_button("Submit Application", use_container_width=True)
+
+    if submit:
+        if not confirm:
+            st.error("🔒 Please check the declaration checkbox to proceed.")
+            st.stop()
+
+        if not all([name, roll, reg, department, shift, session, mobile, email]):
+            st.error("❌ All fields are mandatory. Please fill out the missing information.")
+            st.stop()
+
+        if not mobile.startswith("01") or len(mobile) != 11:
+            st.error("📱 Invalid Bangladeshi mobile number. It must be 11 digits and start with '01'.")
+            st.stop()
+
+        # ডাটাবেজে ডুপ্লিকেট এন্ট্রি রোধ (রোল ও রেজিস্ট্রেশন চেক)
+        roll_check = supabase.table("students").select("*").eq("roll", roll).execute().data
+        reg_check = supabase.table("students").select("*").eq("registration", reg).execute().data
+
+        if roll_check:
+            st.error(f"🚫 Roll Number '{roll}' is already registered in the system.")
+            st.stop()
+
+        if reg_check:
+            st.error(f"🚫 Registration Number '{reg}' is already registered in the system.")
+            st.stop()
+
+        # ডাটা প্রিপারেশন এবং অটো ক্যাপিটালাইজেশন
+        student_data = {
+            "name": name.strip().upper(),
+            "roll": roll.strip(),
+            "registration": reg.strip(),
+            "department": department,
+            "shift": shift,
+            "semester": "7th",
+            "session": session.strip(),
+            "mobile": mobile.strip(),
+            "email": email.strip()
+        }
+
+        # সুপাবেসে ডাটা ইনসার্ট করা
+        supabase.table("students").insert(student_data).execute()
         
-        col1, col2 = st.columns(2)
+        st.success("🎉 Registration Successful! Your data has been securely saved.")
+        st.balloons()
         
-        with col1:
-            name = st.text_input("Full Name (Capital Letters)", placeholder="e.g. RAHAT KHAN")
-            roll = st.text_input("Roll Number", placeholder="6 Digits (e.g. 153245)")
-            department = st.selectbox("Department / Technology", available_dept)
-            session = st.text_input("Academic Session", placeholder="e.g. 2021-22")
-            
-        with col2:
-            email = st.text_input("Email Address", placeholder="name@example.com")
-            reg = st.text_input("Registration Number", placeholder="10 Digits (e.g. 1502145326)")
-            shift = st.selectbox("Shift", ["1st Shift", "2nd Shift"])
-            mobile = st.text_input("Mobile Number", placeholder="01XXXXXXXXX")
-
-        st.markdown("<br>", unsafe_allowed_html=True)
-        confirm = st.checkbox("I hereby declare that all the information provided above is correct and I am a regular student of 7th Semester.")
-        
-        submit = st.form_submit_button("Submit Application", use_container_width=True)
-
-        if submit:
-            if not confirm:
-                st.error("🔒 Please check the declaration checkbox to proceed.")
-                st.stop()
-
-            if not all([name, roll, reg, department, shift, session, mobile, email]):
-                st.error("❌ All fields are mandatory. Please fill out the missing information.")
-                st.stop()
-
-            if not mobile.startswith("01") or len(mobile) != 11:
-                st.error("📱 Invalid Bangladeshi mobile number. It must be 11 digits and start with '01'.")
-                st.stop()
-
-            roll_check = supabase.table("students").select("*").eq("roll", roll).execute().data
-            reg_check = supabase.table("students").select("*").eq("registration", reg).execute().data
-
-            if roll_check:
-                st.error(f"🚫 Roll Number '{roll}' is already registered in the system.")
-                st.stop()
-
-            if reg_check:
-                st.error(f"🚫 Registration Number '{reg}' is already registered in the system.")
-                st.stop()
-
-            student_data = {
-                "name": name.strip().upper(),
-                "roll": roll.strip(),
-                "registration": reg.strip(),
-                "department": department,
-                "shift": shift,
-                "semester": "7th",
-                "session": session.strip(),
-                "mobile": mobile.strip(),
-                "email": email.strip()
-            }
-
-            supabase.table("students").insert(student_data).execute()
-            
-            st.success("🎉 Registration Successful! Your data has been securely saved.")
-            st.balloons()
-            
-            st.info(f"**Registered Name:** {student_data['name']}  \n**Roll:** {student_data['roll']}  \n**Technology:** {student_data['department']} ({student_data['shift']})")
-            st.rerun()
+        st.info(f"**Registered Name:** {student_data['name']}  \n**Roll:** {student_data['roll']}  \n**Technology:** {student_data['department']} ({student_data['shift']})")
+        st.rerun()
 
 # -----------------------------------------------------------------------------
 # STEP 8: PREMIUM ADMIN PANEL
 # -----------------------------------------------------------------------------
-st.markdown("<br><br>", unsafe_allowed_html=True)
+st.write("")
+st.write("")
 st.divider()
 
-st.markdown("<h3 style='color: #475569;'>🔐 Management & Administration</h3>", unsafe_allowed_html=True)
+st.write("### 🔐 Management & Administration Panel")
 
 if "admin_auth" not in st.session_state:
     st.session_state.admin_auth = False
@@ -166,23 +171,24 @@ if not st.session_state.admin_auth:
 else:
     st.success("🔓 Administrative Access Granted")
     
+    # সর্বশেষ ডাটা রি-লোড
     admin_data = load_data()
     admin_counts = dept_count(admin_data)
     
-    st.markdown("#### 📊 Dashboard Overview")
+    st.write("#### 📊 Dashboard Overview")
     m_col1, m_col2, m_col3 = st.columns(3)
     m_col1.metric("Total Enrolled", len(admin_data))
-    m_col2.metric("Total Remaining Slots", MAX_STUDENTS - len(admin_data))
-    m_col3.metric("Institutions Name", "NGPI")
+    m_col2.metric("Remaining Slots", MAX_STUDENTS - len(admin_data))
+    m_col3.metric("Institute Code", "NGPI")
     
-    st.markdown("#### 📂 Technology-wise Enrollment Status")
+    st.write("#### 📂 Technology-wise Enrollment Status")
     for d, limit in LIMITS.items():
         current = admin_counts[d]
         percentage = min(current / limit, 1.0)
         st.write(f"**{d} Technology** ({current} / {limit})")
         st.progress(percentage)
 
-    st.markdown("#### 🔍 Student Search Engine")
+    st.write("#### 🔍 Student Search Engine")
     search_query = st.text_input("Search student by Roll or Registration number", placeholder="Type roll/reg here...")
     
     if search_query:
@@ -192,7 +198,7 @@ else:
         else:
             st.caption("No matching student records found.")
 
-    st.markdown("#### 📋 Database Records")
+    st.write("#### 📋 Master Database Records")
     if admin_data:
         df = pd.DataFrame(admin_data)
         
@@ -206,7 +212,7 @@ else:
                 df.to_excel(writer, index=False, sheet_name='NGPI_7th_Sem')
             
             st.download_button(
-                label="⬇️ Export Database to Excel",
+                label="⬇️ Export Full Database to Excel",
                 data=excel_buffer.getvalue(),
                 file_name="NGPI_Student_Database.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
