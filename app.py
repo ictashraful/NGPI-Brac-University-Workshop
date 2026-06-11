@@ -55,12 +55,24 @@ counts = dept_count(data)
 total = len(data)
 
 # -----------------------------------------------------------------------------
-# STEP 5: NATIVE SMART HEADER (কোনো HTML এরর আসবে না)
+# STEP 5: FIXED SINGLE-LINE HEADER (ফন্ট সাইজ ছোট ও এক লাইনে ফিক্সড)
 # -----------------------------------------------------------------------------
-# প্রফেশনাল ও অফিসিয়াল লুক দিতে স্ট্রিমলিটের নিজস্ব উইজেট ব্যবহার করা হয়েছে
-st.title("Narsingdi Govt Polytechnic Institute")
-st.subheader("🎓 Online Information Collection Portal — 7th Semester")
-st.caption("Please fill out the form carefully with accurate institutional information.")
+# এখানে font-size কমিয়ে ২১ পিক্সেল করা হয়েছে এবং white-space: nowrap দেওয়া হয়েছে
+# এর ফলে স্ক্রিন ছোট হলেও নাম দুই লাইনে ভাঙবে না, এক লাইনেই সোজা থাকবে।
+st.markdown(
+    """
+    <div style="text-align: center; margin-bottom: 5px;">
+        <h2 style="font-family: sans-serif; font-size: 21px; font-weight: 700; color: #1e293b; margin: 0; white-space: nowrap;">
+            Narsingdi Government Polytechnic Institute
+        </h2>
+        <p style="font-family: sans-serif; font-size: 13px; color: #64748b; margin-top: 6px; margin-bottom: 0;">
+            🎓 Online Information Collection Portal — 7th Semester
+        </p>
+    </div>
+    """, 
+    unsafe_allowed_html=True
+)
+st.caption("<p style='text-align: center; margin-top: 2px;'>Please fill out the form carefully with accurate institutional information.</p>", unsafe_allowed_html=True)
 st.divider()
 
 # -----------------------------------------------------------------------------
@@ -83,7 +95,6 @@ with st.form("student_registration_form", clear_on_submit=False):
     
     st.write("### 📝 Student Profile Information")
     
-    # দুই কলামের অত্যন্ত প্রফেশনাল ও রেসপন্সিভ লেআউট
     col1, col2 = st.columns(2)
     
     with col1:
@@ -101,7 +112,6 @@ with st.form("student_registration_form", clear_on_submit=False):
     st.write("")
     confirm = st.checkbox("I hereby declare that all the information provided above is correct and I am a regular student of 7th Semester.")
     
-    # সাবমিট বাটনকে পুরো উইডথ জুড়ে স্মার্ট করা হয়েছে
     submit = st.form_submit_button("Submit Application", use_container_width=True)
 
     if submit:
@@ -117,7 +127,6 @@ with st.form("student_registration_form", clear_on_submit=False):
             st.error("📱 Invalid Bangladeshi mobile number. It must be 11 digits and start with '01'.")
             st.stop()
 
-        # ডাটাবেজে ডুপ্লিকেট এন্ট্রি রোধ (রোল ও রেজিস্ট্রেশন চেক)
         roll_check = supabase.table("students").select("*").eq("roll", roll).execute().data
         reg_check = supabase.table("students").select("*").eq("registration", reg).execute().data
 
@@ -129,7 +138,6 @@ with st.form("student_registration_form", clear_on_submit=False):
             st.error(f"🚫 Registration Number '{reg}' is already registered in the system.")
             st.stop()
 
-        # ডাটা প্রিপারেশন এবং অটো ক্যাপিটালাইজেশন
         student_data = {
             "name": name.strip().upper(),
             "roll": roll.strip(),
@@ -142,7 +150,6 @@ with st.form("student_registration_form", clear_on_submit=False):
             "email": email.strip()
         }
 
-        # সুপাবেসে ডাটা ইনসার্ট করা
         supabase.table("students").insert(student_data).execute()
         
         st.success("🎉 Registration Successful! Your data has been securely saved.")
@@ -171,7 +178,6 @@ if not st.session_state.admin_auth:
 else:
     st.success("🔓 Administrative Access Granted")
     
-    # সর্বশেষ ডাটা রি-লোড
     admin_data = load_data()
     admin_counts = dept_count(admin_data)
     
