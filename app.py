@@ -4,7 +4,12 @@ import pandas as pd
 from io import BytesIO
 
 # -------------------------
-# SUPABASE
+# SET PAGE CONFIG (সবার আগে থাকতে হবে)
+# -------------------------
+st.set_page_config(page_title="Student Registration", layout="centered")
+
+# -------------------------
+# SUPABASE & SECRETS
 # -------------------------
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -25,11 +30,12 @@ LIMITS = {
 MAX_STUDENTS = 100
 
 # -------------------------
-# LOAD DATA
+# LOAD DATA FUNCTION
 # -------------------------
 def load_data():
     return supabase.table("students").select("*").execute().data
 
+# এখন ডাটা লোড করা নিরাপদ
 data = load_data()
 
 # -------------------------
@@ -48,8 +54,6 @@ total = len(data)
 # -------------------------
 # UI HEADER
 # -------------------------
-st.set_page_config(page_title="Student Registration", layout="centered")
-
 st.title("🎓 7th Semester Registration Portal")
 st.caption("Only eligible students can apply")
 
