@@ -160,8 +160,8 @@ with st.form("student_registration_form", clear_on_submit=False):
             st.error("📱 Invalid Bangladeshi mobile number. It must be 11 digits and start with '01'.")
             st.stop()
 
-        roll_check = supabase.table("students").select("*").eq("roll", roll).execute().data
-        reg_check = supabase.table("students").select("*").eq("registration", reg).execute().data
+        roll_check = supabase.table("students").select("*").eq("roll", roll.strip()).execute().data
+        reg_check = supabase.table("students").select("*").eq("registration", reg.strip()).execute().data
 
         if roll_check:
             st.error(f"🚫 Roll Number '{roll}' is already registered in the system.")
@@ -190,7 +190,7 @@ with st.form("student_registration_form", clear_on_submit=False):
         st.rerun()
 
 # -----------------------------------------------------------------------------
-# STEP 8: PREMIUM ADMIN PANEL (DELETE FEATURE INCLUDED)
+# STEP 8: PREMIUM ADMIN PANEL (ডিলিট লজিক ফিক্সড করা হয়েছে)
 # -----------------------------------------------------------------------------
 st.write("")
 st.write("")
@@ -256,36 +256,40 @@ else:
                 use_container_width=True
             )
             
-            # --- 🛠️ নতুন যোগ করা ডিলিট মডিউল (DELETE MODULE) ---
+            # --- 🛠️ শতভাগ ফিক্সড ডিলিট সেকশন ---
             st.write("")
             st.markdown("---")
             st.write("#### 🗑️ Delete Student Record")
             
-            # ডিলিট করার জন্য রোল নাম্বার ইনপুট ফিল্ড
-            delete_roll = st.text_input("Enter Roll Number to delete", placeholder="e.g. 153245")
+            delete_roll = st.text_input("Enter Roll Number to delete", placeholder="e.g. 123456")
             
             if delete_roll:
-                # প্রথমে চেক করা হচ্ছে এই রোল নাম্বারের কোনো ছাত্র আদৌ ডাটাবেজে আছে কি না
-                match = [s for s in admin_data if str(s.get("roll")) == delete_roll.strip()]
+                # String এবং Integer দুটোর সাথেই যেন ম্যাচ করতে পারে সেই সেফটি লজিক
+                cleaned_roll = delete_roll.strip()
+                match = [s for s in admin_data if str(s.get("roll")).strip() == cleaned_roll]
                 
                 if match:
                     target_student = match[0]
                     st.warning(f"⚠️ Are you sure you want to delete **{target_student['name']}** (Roll: {target_student['roll']}, Dept: {target_student['department']})?")
                     
-                    # দুর্ঘটনাবশত ডিলিট হওয়া রুখতে একটি চূড়ান্ত কনফার্মেশন বাটন
                     confirm_delete = st.button("Confirm Permanent Delete", type="primary", use_container_width=True)
                     
                     if confirm_delete:
                         try:
-                            # সুপাবেস টেবিল থেকে নির্দিষ্ট রোলের ডাটা ডিলিট করা হচ্ছে
-                            supabase.table("students").delete().eq("roll", delete_roll.strip()).execute()
-                            st.success(f"🗑️ Record for Roll {delete_roll} has been successfully deleted!")
-                            st.rerun() # স্ক্রিন রিফ্রেশ করে নতুন ডাটা দেখাবে
+                            # ফিক্সড কোয়েরি: ডাটাবেজে ডাটা টাইপ ইন্টিজার বা স্ট্রিং যা-ই থাকুক, দুটোই ট্রাই করবে
+                            # ১. প্রথমে ইন্টিজার ট্রাই করবে যদি রোলটি শুধু সংখ্যা হয়
+                            if cleaned_roll.isdigit():
+                                supabase.table("students").delete().eq("roll", int(cleaned_roll)).execute()
+                            
+                            # ২. সেফটি হিসেবে স্ট্রিং ফরম্যাটেও ডিলিট কোয়েরি ফায়ার করবে
+                            supabase.table("students").delete().eq("roll", cleaned_roll).execute()
+                            
+                            st.success(f"🗑️ Record for Roll {cleaned_roll} has been successfully deleted!")
+                            st.rerun()
                         except Exception as e:
                             st.error(f"Error deleting record: {e}")
                 else:
                     st.error("❌ No student record found with this Roll Number.")
-            # ----------------------------------------------------
     else:
         st.info("The student table is currently empty.")
 
