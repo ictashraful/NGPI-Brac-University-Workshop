@@ -55,10 +55,8 @@ counts = dept_count(data)
 total = len(data)
 
 # -----------------------------------------------------------------------------
-# STEP 5: PREMIUM CENTERED WHITE-TEXT HEADER (নতুন ব্যানার ডিজাইন)
+# STEP 5: PREMIUM CENTERED WHITE-TEXT HEADER
 # -----------------------------------------------------------------------------
-# এখানে text-align: center এবং color: white নিশ্চিত করা হয়েছে।
-# টেক্সট ফুটিয়ে তোলার জন্য একটি দারুণ ব্যাকগ্রাউন্ড বক্স দেওয়া হয়েছে।
 st.markdown(
     """
     <div style="
@@ -87,7 +85,7 @@ st.markdown(
             margin: 0 0 4px 0;
             font-weight: 500;
         ">
-            Online Information Collection Portal — 7th Semester
+            🎓 Online Information Collection Portal — 7th Semester
         </p>
         <p style="
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -108,21 +106,21 @@ st.write("")
 # STEP 6: REGISTRATION CAPACITY CHECK
 # -----------------------------------------------------------------------------
 if total >= MAX_STUDENTS:
-    st.error("Registration Closed (Maximum capacity of 100 students has been reached).")
+    st.error("⚠️ Registration Closed (Maximum capacity of 100 students has been reached).")
     st.stop()
 
 available_dept = [d for d, l in LIMITS.items() if counts[d] < l]
 
 if not available_dept:
-    st.warning("All departments are currently full. Registration is paused.")
+    st.warning("⚠️ All departments are currently full. Registration is paused.")
     st.stop()
 
 # -----------------------------------------------------------------------------
-# STEP 7: MODERN BALANCED STUDENT FORM (3 + 3 Grid)
+# STEP 7: MODERN BALANCED STUDENT FORM
 # -----------------------------------------------------------------------------
 with st.form("student_registration_form", clear_on_submit=False):
     
-    st.write("Student Profile Information")
+    st.write("### 📝 Student Profile Information")
     
     col1, col2 = st.columns(2)
     
@@ -151,26 +149,26 @@ with st.form("student_registration_form", clear_on_submit=False):
 
     if submit:
         if not confirm:
-            st.error("Please check the declaration checkbox to proceed.")
+            st.error("🔒 Please check the declaration checkbox to proceed.")
             st.stop()
 
         if not all([name, roll, reg, department, shift, semester, session, mobile, email]):
-            st.error("All fields are mandatory. Please fill out the missing information.")
+            st.error("❌ All fields are mandatory. Please fill out the missing information.")
             st.stop()
 
         if not mobile.startswith("01") or len(mobile) != 11:
-            st.error("Invalid Bangladeshi mobile number. It must be 11 digits and start with '01'.")
+            st.error("📱 Invalid Bangladeshi mobile number. It must be 11 digits and start with '01'.")
             st.stop()
 
         roll_check = supabase.table("students").select("*").eq("roll", roll).execute().data
         reg_check = supabase.table("students").select("*").eq("registration", reg).execute().data
 
         if roll_check:
-            st.error(f"Roll Number '{roll}' is already registered in the system.")
+            st.error(f"🚫 Roll Number '{roll}' is already registered in the system.")
             st.stop()
 
         if reg_check:
-            st.error(f"Registration Number '{reg}' is already registered in the system.")
+            st.error(f"🚫 Registration Number '{reg}' is already registered in the system.")
             st.stop()
 
         student_data = {
@@ -187,20 +185,18 @@ with st.form("student_registration_form", clear_on_submit=False):
 
         supabase.table("students").insert(student_data).execute()
         
-        st.success("Registration Successful! Your data has been securely saved.")
+        st.success("🎉 Registration Successful! Your data has been securely saved.")
         st.balloons()
-        
-        st.info(f"**Registered Name:** {student_data['name']}  \n**Roll:** {student_data['roll']}  \n**Technology:** {student_data['department']} ({student_data['shift']}) — {student_data['semester']} Semester")
         st.rerun()
 
 # -----------------------------------------------------------------------------
-# STEP 8: PREMIUM ADMIN PANEL
+# STEP 8: PREMIUM ADMIN PANEL (DELETE FEATURE INCLUDED)
 # -----------------------------------------------------------------------------
 st.write("")
 st.write("")
 st.divider()
 
-st.write("Management & Administration Panel")
+st.write("### 🔐 Management & Administration Panel")
 
 if "admin_auth" not in st.session_state:
     st.session_state.admin_auth = False
@@ -211,25 +207,25 @@ if not st.session_state.admin_auth:
         st.session_state.admin_auth = True
         st.rerun()
 else:
-    st.success("Administrative Access Granted")
+    st.success("🔓 Administrative Access Granted")
     
     admin_data = load_data()
     admin_counts = dept_count(admin_data)
     
-    st.write("Dashboard Overview")
+    st.write("#### 📊 Dashboard Overview")
     m_col1, m_col2, m_col3 = st.columns(3)
     m_col1.metric("Total Enrolled", len(admin_data))
     m_col2.metric("Remaining Slots", MAX_STUDENTS - len(admin_data))
-    m_col3.metric("Institute Code", 52041) 
+    m_col3.metric("Institute Code", 10022) 
     
-    st.write("Technology-wise Enrollment Status")
+    st.write("#### 📂 Technology-wise Enrollment Status")
     for d, limit in LIMITS.items():
         current = admin_counts[d]
         percentage = min(current / limit, 1.0)
         st.write(f"**{d} Technology** ({current} / {limit})")
         st.progress(percentage)
 
-    st.write("Student Search Engine")
+    st.write("#### 🔍 Student Search Engine")
     search_query = st.text_input("Search student by Roll or Registration number", placeholder="Type roll/reg here...")
     
     if search_query:
@@ -253,14 +249,45 @@ else:
                 df.to_excel(writer, index=False, sheet_name='NGPI_7th_Sem')
             
             st.download_button(
-                label="Export Full Database to Excel",
+                label="⬇️ Export Full Database to Excel",
                 data=excel_buffer.getvalue(),
                 file_name="NGPI_Student_Database.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True
             )
+            
+            # --- 🛠️ নতুন যোগ করা ডিলিট মডিউল (DELETE MODULE) ---
+            st.write("")
+            st.markdown("---")
+            st.write("#### 🗑️ Delete Student Record")
+            
+            # ডিলিট করার জন্য রোল নাম্বার ইনপুট ফিল্ড
+            delete_roll = st.text_input("Enter Roll Number to delete", placeholder="e.g. 153245")
+            
+            if delete_roll:
+                # প্রথমে চেক করা হচ্ছে এই রোল নাম্বারের কোনো ছাত্র আদৌ ডাটাবেজে আছে কি না
+                match = [s for s in admin_data if str(s.get("roll")) == delete_roll.strip()]
+                
+                if match:
+                    target_student = match[0]
+                    st.warning(f"⚠️ Are you sure you want to delete **{target_student['name']}** (Roll: {target_student['roll']}, Dept: {target_student['department']})?")
+                    
+                    # দুর্ঘটনাবশত ডিলিট হওয়া রুখতে একটি চূড়ান্ত কনফার্মেশন বাটন
+                    confirm_delete = st.button("Confirm Permanent Delete", type="primary", use_container_width=True)
+                    
+                    if confirm_delete:
+                        try:
+                            # সুপাবেস টেবিল থেকে নির্দিষ্ট রোলের ডাটা ডিলিট করা হচ্ছে
+                            supabase.table("students").delete().eq("roll", delete_roll.strip()).execute()
+                            st.success(f"🗑️ Record for Roll {delete_roll} has been successfully deleted!")
+                            st.rerun() # স্ক্রিন রিফ্রেশ করে নতুন ডাটা দেখাবে
+                        except Exception as e:
+                            st.error(f"Error deleting record: {e}")
+                else:
+                    st.error("❌ No student record found with this Roll Number.")
+            # ----------------------------------------------------
     else:
         st.info("The student table is currently empty.")
 
-    if st.button("Force Refresh Database"):
+    if st.button("🔄 Force Refresh Database"):
         st.rerun()
