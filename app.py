@@ -58,7 +58,7 @@ total = len(data)
 # STEP 5: NATIVE SMART HEADER (কোনো HTML এরর আসবে না)
 # -----------------------------------------------------------------------------
 # প্রফেশনাল ও অফিসিয়াল লুক দিতে স্ট্রিমলিটের নিজস্ব উইজেট ব্যবহার করা হয়েছে
-st.title("Narsingdi Government Polytechnic Institute")
+st.title("Narsingdi Govt Polytechnic Institute")
 st.subheader("🎓 Online Information Collection Portal — 7th Semester")
 st.caption("Please fill out the form carefully with accurate institutional information.")
 st.divider()
