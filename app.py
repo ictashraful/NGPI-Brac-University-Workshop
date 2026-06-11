@@ -57,8 +57,6 @@ total = len(data)
 # -----------------------------------------------------------------------------
 # STEP 5: FIXED SINGLE-LINE HEADER (ফন্ট সাইজ ছোট ও এক লাইনে ফিক্সড)
 # -----------------------------------------------------------------------------
-# এখানে font-size কমিয়ে ২১ পিক্সেল করা হয়েছে এবং white-space: nowrap দেওয়া হয়েছে
-# এর ফলে স্ক্রিন ছোট হলেও নাম দুই লাইনে ভাঙবে না, এক লাইনেই সোজা থাকবে।
 st.markdown(
     """
     <div style="text-align: center; margin-bottom: 5px;">
@@ -185,7 +183,8 @@ else:
     m_col1, m_col2, m_col3 = st.columns(3)
     m_col1.metric("Total Enrolled", len(admin_data))
     m_col2.metric("Remaining Slots", MAX_STUDENTS - len(admin_data))
-    m_col3.metric("Institute Code", "NGPI")
+    # ফিক্সড: টেক্সটের জন্য st.metric এর বদলে স্ট্যাটিক টেক্সট শো করানো হয়েছে যেন ক্র্যাশ না করে
+    m_col3.markdown("<div style='padding: 5px 0px;'><strong>Institute</strong><br><span style='font-size: 22px; font-weight: bold; color: #0284c7;'>NGPI</span></div>", unsafe_allowed_html=True)
     
     st.write("#### 📂 Technology-wise Enrollment Status")
     for d, limit in LIMITS.items():
